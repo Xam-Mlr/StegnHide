@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>StegnHide</title>
+    <style>
+
+        ::selection {
+          color:#00BE00;
+          background: transparent;
+        }
+
+        body{
+        background: #151515;
+        font-family: Helvetica, sans-serif;
+        }
+
+        .file-box{    
+        position:relative;
+        display:block;
+        margin:auto;
+        border: none;
+        background: rgb(39,39,39);
+        border-radius: 8px;
+        padding: 12px;
+        transition: 0.2s;
+        width:68vw;
+        height:3vh;
+        cursor:pointer;
+        margin-bottom:4vh;
+        margin-top:4vh;
+        box-shadow: -3px -3px 10px 0px rgb(34, 34, 34),
+        3px 3px 10px 0px rgb(10, 10, 10);
+
+        }
+
+        .input-file{
+        position: absolute;
+        top:0px;
+        left:0px;
+        width:100%;
+        height:100%;
+        opacity:0;
+        margin:auto;
+        cursor: pointer;
+        }
+
+        .label-file{
+        display: inline-block;
+        text-align:center;
+        width: 100%;
+        color: white;
+        cursor:pointer;
+        }
+
+        .txtArea{
+        font-family: Helvetica, sans-serif;
+        display:block;
+        margin:auto;
+        resize:none;
+        width:70vw;
+        height:20vh;
+        background: rgb(39,39,39);
+        border-radius: 8px;
+        border:none;
+        outline:none;
+        margin-bottom:4vh;
+        color:white;
+        box-shadow: inset 2px 2px 10px 0px rgb(34, 34, 34),
+        inset 3px 3px 10px 0px rgb(10, 10, 10);
+        }
+
+        .txtArea::placeholder{
+          padding-top: 6px;
+          padding-left: 10px;
+        }
+        .square{
+        display:block;
+        margin:auto;
+        position:relative;
+        width:70vw;
+        height:45vh;
+        overflow:hidden;
+        border-radius: 1vw;
+        margin-bottom:4vh;
+        box-shadow: -3px -3px 10px 0px rgb(34, 34, 34),
+        3px 3px 10px 0px rgb(10, 10, 10);
+        }
+
+        .mainImg{
+        position: absolute;
+        max-width: 100%;
+        width: 100%;
+        height: auto;
+        top: 50%;     
+        left: 50%;
+        transform: translate( -50%, -50%);
+        }
+
+        .button{
+        display:block;
+        margin:auto;
+        width:70vw;
+        height:6.5vh;
+        border-radius:1vw;
+        border:none;
+        background: linear-gradient(175deg, rgb(32, 241, 32) 0%, rgba(0,190,0,0.7) 100%);
+        color:white;
+        cursor:pointer;
+        /*box-shadow: 1px 1px 5px 0px #00BE00,
+        -1px -1px 5px 0px #72ff72;*/
+        box-shadow: -3px -3px 10px 0px rgb(34, 34, 34),
+        3px 3px 10px 0px rgb(10, 10, 10);
+        }
+
+        .switch{
+          padding-top: 10px;
+          display:block;
+          margin:auto;
+          width: 150px;
+        }
+
+        .qst{
+          display: inline-block;
+          color:white;
+          font-size: 10px;
+          text-align: center;   
+          padding-left: 0.7vw; 
+        }
+        
+        .switch_mode{
+          display: inline-block;
+          color:#00BE00;
+          font-size: 10px;
+          padding: 0px;
+          cursor: pointer;
+        }
+
+    </style>
+
+</head>
+<body>
+
+  <form method="POST" action="" id="form">
+    <div class="file-box">
+      <label class="label-file">Import an image</label>
+      <input type=file class="input-file" id="input-file" name="image" accept="image/*">
+    </div>
+    
+    <textarea placeholder="Text to hide" class="txtArea"></textarea>
+
+    <div class="square">
+      <img class="mainImg" src="backend/resource/default_image_01.png">
+    </div>
+    
+    <button type="button" class="button" id="button" onclick="send_hide()">Hide data</button>
+
+    <div class="switch">
+
+        <p class="qst">Data already hidden ?</p>
+        <p class="switch_mode">Get text</p>
+    </div>
+
+  </form>
+
+
+
+  <script>
+
+    const {ipcRenderer} = window.require('electron');
+    const {PythonShell} = window.require("python-shell");
+
+    let mode = "hide";
+
+    document.querySelector(".input-file").addEventListener("change", (event)=>{
+
+        try{
+          console.log("ok")
+          let path = document.getElementById("input-file").files[0].path;
+          console.log(path)
+          document.querySelector(".mainImg").src=path;
+        }catch(e){
+          console.log(e)
+        }
+      }
+    )
+
+    function send_hide(){
+
+      try{
+
+        let photo = document.getElementById("input-file").files[0].path;
+        let text = document.querySelector(".txtArea").value;
+
+        if(text != ""){
+          ipcRenderer.send('python_hide', [photo, text])
+        }else{
+          window.alert("Please enter a text to hide data")
+        }
+
+      }catch(e){
+        if(e instanceof TypeError)
+          window.alert("Please choose an image")
+      }
+    }
+
+    function send_get(){
+
+      try{
+
+        let photo = document.getElementById("input-file").files[0].path;
+        let text = "none"
+
+        ipcRenderer.send('python_get', [photo, text])
+
+        }catch(e){
+        if(e instanceof TypeError)
+          window.alert("Please choose an image")
+        }
+
+    }
+
+  ipcRenderer.on("python_hide reply", (event, data)=>{ //=> replace function(...){}     
+        window.alert(data)        
+      })
+
+  ipcRenderer.on("python_get reply", (event, data)=>{
+    document.querySelector(".txtArea").value = data[1]
+    window.alert(data[0])
+  })
+  
+
+
+  document.querySelector(".switch_mode").addEventListener("click", (event)=>{
+    console.log("ok")
+    if (mode == "hide"){
+      mode = "get"
+      document.querySelector(".button").innerText = "Get data"
+      document.querySelector(".qst").innerText = "Wanna hide data before ?"
+      document.querySelector(".switch_mode").innerText = "Hide Text"
+      document.querySelector(".txtArea").placeholder = "Text will be here"
+      document.querySelector(".switch").style.width = "200px"
+      document.querySelector(".button").onclick = send_get
+      document.querySelector(".txtArea").value = ""
+      document.querySelector(".mainImg").src="backend/resource/default_image_01.png";
+
+      }else{
+      mode = "hide"
+      document.querySelector(".button").innerText = "Hide data"
+      document.querySelector(".qst").innerText = "Data already hidden ?"
+      document.querySelector(".switch_mode").innerText = "Get text"
+      document.querySelector(".txtArea").placeholder = "Text will be here"
+      document.querySelector(".switch").style.width = "150px"
+      document.querySelector(".button").onclick = send_hide
+      document.querySelector(".txtArea").value = ""
+      document.querySelector(".mainImg").src="backend/resource/default_image_01.png";
+    }
+  })
+
+
+  /*
+    function switch_mode(){
+      console.log("ok")
+      if (mode == "hide"){
+        mode = "get"
+        document.querySelector(".button").innerText = "Get data"
+        document.querySelector(".qst").innerText = "Wanna hide data before ?"
+        document.querySelector(".switch_mode").innerText = "Hide Text"
+        document.querySelector(".txtArea").placeholder = "Text will be here"
+        document.querySelector(".switch").style.width = 200
+        }else{
+        mode = "hide"
+        document.querySelector(".button").innerText = "Hide data"
+        document.querySelector(".qst").innerText = "Data already hidden ?"
+        document.querySelector(".switch_mode").innerText = "Get text"
+        document.querySelector(".txtArea").placeholder = "Text will be here"
+        document.querySelector(".switch").style.width = 150
+      }
+    }
+*/
+
+//document.querySelector(".button").onclick
+
+
+  </script>
+
+
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "name": "StegnHide",
+  "version": "1.0.0",
+  "description": "Steg'n Hide is a steganography tool to hide text into png images by using binary algorythms",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-packager . StegnHide"
+  },
+  "author": "Xam_Mlr",
+  "license": "MIT",
+  "build": {
+    "appId": "yourappid",
+    "category": "utilities",
+    "linux": {
+      "icon": "build/icon.icns",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    }
+  },
+  "devDependencies": {
+    "electron": "^13.2.1",
+    "electron-packager": "^15.3.0"
+  },
+  "dependencies": {
+    "python-shell": "^3.0.0"
+  }
+}
